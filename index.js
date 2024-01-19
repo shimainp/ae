@@ -38,17 +38,18 @@ app.get("/ace/theme-tomorrow_night_eighties.js",function (req, res) {
 app.get("/ace/worker-lua.js",function (req, res) {
   res.sendFile('/ace/worker-lua.js', { root: '.' })
 })
-const wss = new WebSocket.Server({ port: 123 });
 
-wss.on('connection', function connection(ws, req) {
-  let IP = req.connection.remoteAddress.replace("::ffff:","")
-  Send[IP] = ws
-  // Send[IP].send(IP)
-  console.log('New WebSocket connection established.',IP);
-  ws.on('close', function close() {
-    console.log('WebSocket connection closed.');
-  });
-});
+const WebSocket = require('ws')
+const PORT = process.env.PORT || 3000;
+const wss = new WebSocket.Server({ port: PORT })
+wss.on('connection', ws => {
+  ws.on('message', message => {
+    console.log(`Received message => ${message}`)
+  })
+  ws.send('Hello! Message From Server!!')
+})
+
+
 
 const port = 80
 
