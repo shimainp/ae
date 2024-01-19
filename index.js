@@ -1,10 +1,14 @@
-const WebSocket = require('ws');
 const express = require('express');
+const WebSocket = require('ws');
+
+const app = express();
 const { sendFile } = require('express/lib/response');
-const app = express()
+
+
 let Script = []
 let Send = []
 app.use(express.json());
+
 app.post('/Execute', function (req, res) {
   let IP = req.ip.replace("::ffff:","");
   Script[IP] =   req.body.Script
@@ -38,9 +42,10 @@ app.get("/ace/theme-tomorrow_night_eighties.js",function (req, res) {
 app.get("/ace/worker-lua.js",function (req, res) {
   res.sendFile('/ace/worker-lua.js', { root: '.' })
 })
-const wss = new WebSocket.Server({ port: 123 });
 
-wss.on('connection', function connection(ws, req) {
+const wsServer = new WebSocket.Server({ noServer: true });
+
+wsServer.on('connection', function connection(ws, req) {
   let IP = req.connection.remoteAddress.replace("::ffff:","")
   Send[IP] = ws
   // Send[IP].send(IP)
@@ -49,8 +54,16 @@ wss.on('connection', function connection(ws, req) {
     console.log('WebSocket connection closed.');
   });
 });
-const port = 80
 
-app.listen(port, () => {
-  console.log(`Server running at <http://localhost>:${port}/`);
+
+const port = 80;
+
+const server = app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}/`);
+});
+
+server.on('upgrade', (request, socket, head) => {
+  wsServer.handleUpgrade(request, socket, head, socket => {
+    wsServer.emit('connection', socket, request);
+  });
 });
